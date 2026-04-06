@@ -1,0 +1,31 @@
+# Build artifacts
+dist/
+*.egg-info/
+build/
+*.whl
+*.tar.gz
+
+# Node
+node_modules/
+package-lock.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Internal working files (kept locally, not published)
+CLAUDE.md

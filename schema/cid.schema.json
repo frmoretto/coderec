@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/frmoretto/coderec/schema/cid.schema.json",
+  "title": "Codebase Intelligence Document (CID)",
+  "description": "Machine-readable contract for coderec output artifacts.",
+  "type": "object",
+  "required": [
+    "cid_version",
+    "metadata",
+    "artifacts",
+    "verification"
+  ],
+  "properties": {
+    "cid_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "metadata": {
+      "type": "object",
+      "required": [
+        "project_name",
+        "generated_at",
+        "sot_root",
+        "sot_mode"
+      ],
+      "properties": {
+        "project_name": { "type": "string", "minLength": 1 },
+        "generated_at": { "type": "string", "format": "date-time" },
+        "sot_root": { "type": "string", "minLength": 1 },
+        "sot_mode": { "type": "string", "enum": ["git", "snapshot"] },
+        "commit_sha": { "type": "string" },
+        "snapshot_hash": { "type": "string" },
+        "dirty_at_start": { "type": "boolean" },
+        "dirty_fingerprint_start": { "type": "string" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "sot_mode": { "const": "git" } } },
+          "then": { "required": ["commit_sha"] }
+        },
+        {
+          "if": { "properties": { "sot_mode": { "const": "snapshot" } } },
+          "then": { "required": ["snapshot_hash"] }
+        }
+      ],
+      "additionalProperties": true
+    },
+    "artifacts": {
+      "type": "object",
+      "required": [
+        "system_map",
+        "modules",
+        "coherence_report",
+        "decision_register"
+      ],
+      "properties": {
+        "system_map": { "type": "string", "description": "Path or URI to system_map artifact" },
+        "modules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["module_id", "path", "card"],
+            "properties": {
+              "module_id": { "type": "string", "pattern": "^mod_[0-9a-f]{16}$" },
+              "path": { "type": "string", "minLength": 1 },
+              "card": { "type": "string", "description": "Path or URI to module card artifact" }
+            },
+            "additionalProperties": true
+          }
+        },
+        "coherence_report": { "type": "string", "description": "Path or URI to coherence report" },
+        "decision_register": { "type": "string", "description": "Path or URI to decision register" }
+      },
+      "additionalProperties": true
+    },
+    "verification": {
+      "type": "object",
+      "required": ["status", "gates"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["VALID", "INVALID", "DEGRADED", "STALE"]
+        },
+        "stale_reason": {
+          "type": "string",
+          "enum": ["HEAD_MOVED", "CONTENT_CHANGED", "TREE_DIRTIED", "DIRTY_CONTENT_CHANGED"]
+        },
+        "gates": {
+          "type": "array",
+          "minItems": 7,
+          "items": {
+            "type": "object",
+            "required": ["gate", "status"],
+            "properties": {
+              "gate": { "type": "integer", "minimum": 1, "maximum": 7 },
+              "name": { "type": "string" },
+              "status": { "type": "string", "enum": ["PASS", "FAIL", "WARN", "UNVERIFIABLE"] },
+              "details": { "type": "string" }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

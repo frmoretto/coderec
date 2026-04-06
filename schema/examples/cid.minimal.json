@@ -1,0 +1,35 @@
+{
+  "cid_version": "0.1.0",
+  "metadata": {
+    "project_name": "example-project",
+    "generated_at": "2026-04-06T10:00:00Z",
+    "sot_root": "/absolute/path/to/repo",
+    "sot_mode": "git",
+    "commit_sha": "abc123def4567890abc123def4567890abc123de",
+    "dirty_at_start": false
+  },
+  "artifacts": {
+    "system_map": "CID/system_map.md",
+    "modules": [
+      {
+        "module_id": "mod_4e6f18b9d2c7a901",
+        "path": "src/auth",
+        "card": "CID/modules/auth.md"
+      }
+    ],
+    "coherence_report": "CID/coherence_report.md",
+    "decision_register": "CID/decision_register.md"
+  },
+  "verification": {
+    "status": "VALID",
+    "gates": [
+      { "gate": 1, "name": "Path verification", "status": "PASS" },
+      { "gate": 2, "name": "Version verification", "status": "PASS" },
+      { "gate": 3, "name": "Contract verification", "status": "PASS" },
+      { "gate": 4, "name": "Schema verification", "status": "PASS" },
+      { "gate": 5, "name": "CSS verification", "status": "PASS" },
+      { "gate": 6, "name": "Behavior verification", "status": "PASS" },
+      { "gate": 7, "name": "Cross-reference consistency", "status": "PASS" }
+    ]
+  }
+}
