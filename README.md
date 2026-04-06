@@ -1,142 +1,254 @@
-# coderec — Codebase Reconnaissance for Spec-Driven Development
+<!-- TODO: VISUAL ASSET — Banner image
+     BRIEF: Dark background, "coderec" in monospace/terminal font, tagline below.
+     Style reference: Repomix banner (clean, branded, tagline baked in).
+     Text: "coderec — Verified codebase intelligence for spec-driven development"
+     File: assets/banner.png
+-->
 
-**The brownfield on-ramp for any SDD methodology.**
+<p align="center">
+  <strong>coderec</strong><br>
+  <em>The first open protocol for verified codebase intelligence.</em>
+</p>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
+  <a href="https://www.npmjs.com/package/coderec"><img src="https://img.shields.io/npm/v/coderec.svg" alt="npm"></a>
+  <a href="https://pypi.org/project/coderec/"><img src="https://img.shields.io/pypi/v/coderec.svg" alt="PyPI"></a>
+  <a href="https://github.com/frmoretto/coderec"><img src="https://img.shields.io/github/stars/frmoretto/coderec?style=social" alt="GitHub Stars"></a>
+</p>
+
+<p align="center">
+  <a href="#why-coderec-exists">Why</a> &bull;
+  <a href="#what-coderec-produces">CID</a> &bull;
+  <a href="#how-it-works">How it works</a> &bull;
+  <a href="#verification-gates">Gates</a> &bull;
+  <a href="#quick-start">Quick start</a> &bull;
+  <a href="#real-world-results">Results</a> &bull;
+  <a href="#ecosystem">Ecosystem</a> &bull;
+  <a href="#roadmap">Roadmap</a>
+</p>
+
+---
 
 > *"You wouldn't send troops into unknown terrain without reconnaissance. Why are you sending your AI agent into 50,000 lines of code blind?"*
 
----
+## Why coderec exists
 
-## The Problem
+Every spec-driven methodology assumes you start from a blank page. Most teams don't.
 
-Every SDD tool assumes you start with a blank page. Most developers don't.
+If all you have is a 10-year-old monolith and a handful of tickets, you face three bad options:
 
-You have 50,000 lines of code, undocumented decisions, and a team that left six months ago. You can't write specs for the future without understanding the past.
+- Dump the whole repo into an LLM and hope it "understands."
+- Spend weeks spelunking the code by hand before you can write a single spec.
+- Pretend the legacy system is a black box and write specs that don't match reality.
 
-When an AI agent was asked to document a production codebase for regeneration, it produced **29 factual errors** — wrong file paths, wrong package versions, wrong schema types, wrong CSS values, wrong component interfaces. Root cause: the agent read from the wrong directory, used versions from npm latest instead of the lockfile, and listed file names from memory instead of the filesystem.
+**coderec formalizes a fourth option:**
 
-**The failure happened because there was no protocol.**
+> **First:** turn the codebase into a verified, structured **CID** (what *IS*). <br>
+> **Then:** feed that into any SDD tool to define what *SHOULD BE*.
 
----
+An AI agent was asked to document a production codebase. It produced **29 factual errors** -- wrong file paths, wrong package versions, wrong interfaces, wrong CSS values. All because it read from the wrong directory and listed things from memory. coderec exists so that never happens again.
 
-## What Is coderec?
-
-coderec is a **codebase reconnaissance protocol** that transforms existing codebases into **Codebase Intelligence Documents (CIDs)** — verified, structured artifacts that any SDD methodology can consume as input.
-
-Four progressive layers, each building on the last:
-
-| Layer | Name | What it does |
-|-------|------|-------------|
-| 1 | **Cartography** | Map system boundaries, modules, dependencies, entry points |
-| 2 | **Module Intelligence** | Per-module intelligence cards: purpose, contracts, assumptions, behavior |
-| 3 | **Cross-Module Synthesis** | Find contradictions, dead code, implicit coupling, version conflicts |
-| 4 | **Decision Archaeology** | Recover the "why" from git history with confidence levels |
-
-Each layer's output is **compacted context** for the next layer. Code is read primarily in Layer 2, with minimal targeted re-reads in Layers 3-4 for evidence verification.
+<!-- TODO: VISUAL ASSET — Before/After diagram
+     LEFT:  "Without coderec" — scattered files, question marks, red X errors
+     RIGHT: "With coderec" — structured CID, green checkmarks, 7 gates PASS
+     File: assets/before-after.svg
+-->
 
 ---
 
-## How It Works
+## What coderec produces
 
-### Source of Truth Enforcement
-
-Every coderec run binds to a **Source of Truth** — a specific codebase at a specific commit:
+Running coderec on a codebase emits a **Codebase Intelligence Document (CID)**:
 
 ```
-coderec full --sot /path/to/production/codebase
+CID/
++-- system_map.md          <- Layer 1: boundaries, modules, dependencies
++-- modules/
+|   +-- auth.md            <- Layer 2: intelligence card + verbatim contracts
+|   +-- billing.md
+|   \-- ...
++-- coherence_report.md    <- Layer 3: contradictions, dead code, type gaps
++-- decision_register.md   <- Layer 4: documented / inferred / unknown decisions
++-- verification_status.md <- 7-gate results + CID status
+\-- triage.md              <- human decisions: FIX / ACCEPT / DEFER
 ```
 
-All reads use absolute paths prefixed with SOT_ROOT. No CWD resolution. No reading from memory. The exact commit SHA is pinned at run start and revalidated at run end. This is the mechanism that prevents the 29-error class of failures.
+Think of the CID as **verified documentation for what exists right now** -- not a spec, not a plan, not a refactor proposal.
 
-Supports three modes:
-- **Clean git** (default) — pinned to HEAD, clean working tree required
-- **Dirty git** (`--allow-dirty`) — proceeds with uncommitted changes, CID capped at DEGRADED
-- **Snapshot** (`--sot-mode snapshot`) — for non-git codebases (tarballs, vendor drops)
+### CID vs Spec
 
-### 7-Gate Verification
+coderec is deliberately non-prescriptive:
 
-The CID is a derived artifact — it can be wrong. Before use, 7 internal gates verify it against source:
+|  | CID (coderec) | Spec (Stream Coding / Spec Kit / OpenSpec / your SDD) |
+|--|---------------|-------------------------------------------------------|
+| **Purpose** | Document what **exists** | Prescribe what **should** exist |
+| **Tense** | Present -- "the system does X" | Future -- "the system shall do X" |
+| **Quality issues** | Observed and flagged | Resolved with prescribed fix |
+| **Type gaps** | "field currently uses `any`" | "field shall use `string`" |
+| **Dead code** | Marked as candidate | Decision: remove, keep, or quarantine |
+| **Decisions** | Classified by confidence | Ratified, changed, or explicitly re-made |
 
-| Gate | What it checks | Failure severity |
-|------|---------------|-----------------|
-| 1 — Path | Every file path resolves against SOT_ROOT | INVALID |
-| 2 — Version | Every version matches lock file | DEGRADED |
-| 3 — Contract | Every verbatim export signature matches source | INVALID |
-| 4 — Schema | Every type definition matches source exactly | DEGRADED |
-| 5 — CSS | Every CSS token matches globals/theme | DEGRADED |
-| 6 — Behavior | Render logic, HTML attributes, metadata, routing match source | INVALID |
-| 7 — Cross-ref | All CID files agree on names, paths, IDs | INVALID |
+> **Rule:** coderec observes. It does **not** prescribe. Remediation lives downstream.
+
+---
+
+## How it works
+
+coderec uses **progressive disclosure** -- each layer compacts the codebase into smaller, more semantic artifacts and feeds the next.
+
+| Layer | Name | Input | Output |
+|-------|------|-------|--------|
+| 1 | **Cartography** | File tree, imports, entry points | System map (boundaries, modules, dependencies) |
+| 2 | **Module Intelligence** | One module + system map | Intelligence card (contracts, behavior, assumptions) |
+| 3 | **Cross-Module Synthesis** | All Layer 2 cards (not code) | Coherence report (contradictions, dead code, coupling) |
+| 4 | **Decision Archaeology** | Cards + git blame + commits | Decision register (documented / inferred / unknown) |
+
+Code is read primarily in Layer 2. Layers 3-4 work from compacted cards with minimal targeted re-reads for evidence verification.
+
+### Source of Truth enforcement
+
+Every run pins to a specific commit. Every read uses absolute paths prefixed with `SOT_ROOT`. Three modes:
+
+- **Clean git** (default) -- pinned to HEAD, clean tree required
+- **Dirty git** (`--allow-dirty`) -- proceeds with uncommitted changes, CID capped at DEGRADED
+- **Snapshot** (`--sot-mode snapshot`) -- for non-git codebases (tarballs, vendor drops)
+
+This is the mechanism that prevents the 29-error class of failures. Not a suggestion -- an enforcement primitive.
+
+---
+
+## Verification gates
+
+The CID is derived -- it can be wrong. 7 gates verify it against source before anyone trusts it.
+
+| Gate | Checks | Failure |
+|------|--------|---------|
+| 1 -- Path | File paths resolve against SOT | INVALID |
+| 2 -- Version | Versions match lock file | DEGRADED |
+| 3 -- Contract | Export signatures match source at provenance anchor | INVALID |
+| 4 -- Schema | Types match source exactly | DEGRADED |
+| 5 -- CSS | Tokens match theme/globals | DEGRADED |
+| 6 -- Behavior | Render logic, HTML attrs, metadata, routing match source | INVALID |
+| 7 -- Cross-ref | All CID files internally consistent | INVALID |
 
 Plus: secret scan (pre-step), end-of-run SOT revalidation (TOCTOU protection).
 
-CID status: **VALID** | **INVALID** | **DEGRADED** | **STALE**
+**CID Status:** `VALID` | `DEGRADED` | `STALE` | `INVALID`
 
-### Verbatim Contracts with Provenance
+Downstream tools treat `INVALID` as a hard stop.
 
-Module cards copy exact signatures from source — never paraphrase. Every entry includes a provenance anchor (`Source: file:line`) and content hash. Gate 3 reads the source at that exact location, computes the hash, and compares. When snippets contain redacted secrets, verification uses hash comparison instead of string matching.
+<!-- TODO: VISUAL ASSET — Terminal screenshot/SVG
+     Show `coderec full` running with colored gate results, ending with "CID STATUS: VALID"
+     File: assets/terminal-output.svg
+-->
 
 ---
 
-## The Ecosystem
+## Quick start
+
+### Use as an AI skill (recommended)
+
+```
+coderec full --sot /path/to/your/codebase
+```
+
+The skill is in [`skill/SKILL.md`](skill/SKILL.md). Load it into Claude Code, Codex, or any agent.
+
+### Scoped reconnaissance (one area)
+
+```
+coderec scope src/auth --sot /path/to/codebase --depth 1
+```
+
+Runs Layer 1 on the full repo, then Layers 2-4 only for `auth` + its dependencies.
+
+### Cartography only (quick orientation)
+
+```
+coderec cartography --sot /path/to/codebase
+```
+
+Layer 1 only. Fast pass for first contact with an unfamiliar codebase.
+
+### Install placeholder (CLI coming soon)
+
+```bash
+npx coderec          # npm
+pip install coderec   # PyPI
+```
+
+---
+
+## Real-world results
+
+<!-- TODO: VISUAL ASSET — Results card (4 stats, dark card, green accents)
+     File: assets/results-card.svg
+-->
+
+First test: the exact production codebase that produced the original 29 errors.
+
+- **CID Status: VALID** -- all 7 gates passed
+- **44 findings** surfaced (contradictions, dead code, type gaps, duplications)
+- **7 actionable specs** generated from triage decisions
+- **0 of the original 29 errors** would recur with this CID as input
+
+---
+
+## Design rigor
+
+The protocol was hardened through **12 adversarial review passes** across 3 AI models (Claude Haiku, Claude Opus, OpenAI Codex). Each pass attacked the design; each flaw was fixed before the next pass.
+
+Key mechanisms designed through adversarial review:
+
+- Module boundary algorithm (6-level precedence, deterministic, nested)
+- Provenance anchors (file:line + content hash on every contract)
+- Secret redaction with dual-representation (redacted display + original hash for gate checks)
+- Module disposition table (explicit skip/merge justification -- no silent omissions)
+- Dependency footprint tracking for scoped staleness detection
+- Concrete token budgets per layer with overflow reporting
+
+---
+
+## When to use coderec
+
+**Use coderec when:**
+
+- You're introducing SDD into a **legacy project** and need a verified starting point
+- You need a **shared, trustworthy map** across teams (architecture, product, QA, ops)
+- You want an AI agent to operate on a brownfield codebase **without hallucinating** what the code does
+
+**Skip coderec when:**
+
+- You have a small, well-understood repo and just need a quick answer about one function
+- You're doing pure greenfield with a clean spec already in place
+
+---
+
+## Ecosystem
+
+coderec is **complementary**, not competitive:
 
 ```
 coderec       ->  understand your codebase  ->  CID (what IS)
 specverify    ->  verify your specs         ->  report
-stream-coding ->  write your specs          ->  code (what SHOULD BE)
+Stream Coding ->  write your specs          ->  code (what SHOULD BE)
+Spec Kit      ->  spec + plan.md            ->  code
+OpenSpec      ->  proposal / spec deltas    ->  code
 ```
 
-Three tools, three jobs, zero overlap. Each works standalone with any SDD framework.
+<!-- TODO: VISUAL ASSET — Ecosystem flow diagram (horizontal pipeline)
+     File: assets/ecosystem.svg
+-->
 
-| Tool | Input | Output | Repo |
-|------|-------|--------|------|
-| **coderec** | Existing codebase | Codebase Intelligence Document | This repo |
-| [specverify](https://github.com/frmoretto/specverify) | Specifications | Verification report | frmoretto/specverify |
-| [Stream Coding](https://github.com/frmoretto/stream-coding) | Verified specs | Production code | frmoretto/stream-coding |
+The CID is **framework-agnostic** -- a machine-readable contract that any SDD tool can consume.
 
----
-
-## Quick Start
-
-### Option 1: Claude Code / Claude Desktop
-
-The skill file is at `skill/SKILL.md`. Load it as a skill or paste it into your conversation context.
-
-```
-Read: skill/SKILL.md
-```
-
-Then: *"Run coderec full on /path/to/my/codebase"*
-
-### Option 2: Any AI Agent
-
-1. Read `skill/SKILL.md` (protocol definition)
-2. Read `skill/commands/full.md` (execution flow)
-3. Read the templates in `skill/templates/` (output format)
-4. Execute the protocol against your codebase
-
-### Option 3: Manual
-
-Read the skill definition and templates. Follow the 4-layer process manually, using the templates as checklists. Run the 7-gate verification against your output.
-
----
-
-## Repository Structure
-
-```
-coderec/
-+-- README.md              <- this file
-+-- AGENTS.md              <- agent discovery file
-+-- LICENSE                 <- MIT
-+-- skill/                  <- the protocol
-|   +-- SKILL.md            <- main skill definition
-|   +-- commands/           <- execution flows (full, scope, cartography)
-|   \-- templates/          <- output templates (5 files)
-\-- schema/                 <- CID machine-readable contract
-    +-- cid.schema.json     <- JSON Schema for CID output
-    +-- examples/           <- example fixture
-    \-- validate-cid.mjs    <- validator
-```
+| Tool | Purpose | Link |
+|------|---------|------|
+| **coderec** | Understand your codebase | This repo |
+| [specverify](https://github.com/frmoretto/specverify) | Verify your specs | frmoretto/specverify |
+| [Stream Coding](https://github.com/frmoretto/stream-coding) | Write your specs | frmoretto/stream-coding |
+| [Clarity Gate](https://github.com/frmoretto/clarity-gate) | Epistemic quality for docs | frmoretto/clarity-gate |
 
 ---
 
@@ -145,18 +257,23 @@ coderec/
 Machine-readable CID contract for downstream tool integration:
 
 ```bash
-# Validate a CID JSON
-npm install ajv
 node schema/validate-cid.mjs path/to/cid.json
 ```
 
-See [schema/README.md](schema/README.md) for details.
+See [`schema/`](schema/) for JSON Schema, example fixture, and validator.
 
 ---
 
-## Design Process
+## Prior art and philosophy
 
-This protocol was designed through **12 adversarial review passes** across 3 AI models (Claude Haiku 4.5, Claude Opus 4.6, OpenAI Codex). Each pass attacked the design for flaws, and each flaw was fixed before the next pass. The original 29-error case study that motivated the design is documented internally.
+coderec builds on decades of work:
+
+- **Software Architecture Recovery** research (SAR, ModARO, ArchAgent, Code2DFD)
+- **AI documentation generators** (CodeWiki, KT Studio, Swimm, GitLoop)
+- **Enterprise modernization** tools (EPAM ART, Augment Context Engine, Thoughtworks CodeConcise)
+- **SDD frameworks** (Spec Kit, OpenSpec, DocDD, intent-driven.dev)
+
+What's new is the combination: **layered analysis + verified artifact + standard schema + SDD handoff.** No existing tool publishes a framework-agnostic, gate-verified intermediate document for brownfield-to-spec workflows.
 
 ---
 
@@ -164,42 +281,34 @@ This protocol was designed through **12 adversarial review passes** across 3 AI 
 
 | Phase | Status |
 |-------|--------|
-| Protocol design (skill + templates + gates) | Done |
+| Protocol design (skill + templates + 7 gates) | Done |
 | Adversarial hardening (12 passes, 3 models) | Done |
 | CID JSON Schema + validator | Done |
+| First real-world test (VALID CID on production codebase) | Done |
 | Namespace claims (npm + PyPI) | Done |
-| First real-world test | Next |
-| CLI tool implementation | Planned |
-| Claude Code skill distribution | Planned |
-
----
-
-## Related Projects
-
-| Project | Purpose | URL |
-|---------|---------|-----|
-| Stream Coding | Documentation-first methodology | [stream-coding.com](https://stream-coding.com) |
-| specverify | Specification verification | [github.com/frmoretto/specverify](https://github.com/frmoretto/specverify) |
-| Clarity Gate | Epistemic quality for RAG | [github.com/frmoretto/clarity-gate](https://github.com/frmoretto/clarity-gate) |
+| CLI tool + MCP server | Planned |
+| Triage dashboard (visual decision UI) | Planned |
+| Language profiles (JVM, COBOL, PHP, C#) | Planned |
 
 ---
 
 ## Contributing
 
-This is an early-stage protocol. Areas seeking input:
+Areas seeking input:
 
-- **Real-world testing** — Run coderec on your brownfield codebase and report what works/breaks
-- **Language support** — Boundary heuristics and template sections for languages beyond JS/TS/Python/Go/Rust/Java
-- **Gate implementations** — Tooling that automates the 7-gate verification
+- **Real-world testing** -- Run coderec on your brownfield codebase and report what works/breaks
+- **Language support** -- Boundary heuristics beyond JS/TS/Python/Go/Rust/Java
+- **Gate implementations** -- Tooling that automates the 7-gate verification
 
 ---
 
 ## License
 
-MIT
+MIT -- see [`LICENSE`](LICENSE).
 
 ## Author
 
-Francesco Marinoni Moretto
-- [LinkedIn](https://linkedin.com/in/francesco-moretto)
-- [GitHub](https://github.com/frmoretto)
+**Francesco Marinoni Moretto**
+&bull; [GitHub](https://github.com/frmoretto)
+&bull; [LinkedIn](https://linkedin.com/in/francesco-moretto)
+&bull; [Stream Coding](https://stream-coding.com)

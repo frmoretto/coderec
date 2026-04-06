@@ -239,7 +239,8 @@ CID/
 |   \-- ...
 +-- coherence_report.md    <- Layer 3: contradictions, dead code, type gaps
 +-- decision_register.md   <- Layer 4: documented / inferred / unknown
-\-- verification_status.md <- 7-gate verification against source
++-- verification_status.md <- 7-gate verification against source
+\-- triage.md              <- Handoff: human decisions (FIX/ACCEPT/DEFER/INVESTIGATE)
 ```
 
 ## Templates
@@ -251,6 +252,7 @@ CID/
 | [coherence_report.md](templates/coherence_report.md) | 3 | Contradictions, dead code, implicit coupling, type gaps, duplication |
 | [decision_register.md](templates/decision_register.md) | 4 | Decisions with confidence levels + action required for unknowns |
 | [verification_status.md](templates/verification_status.md) | Gate | 7-gate verification: paths, versions, contracts, schema, CSS, behavior, cross-reference |
+| [triage.md](templates/triage.md) | Handoff | Human decision menu: FIX / ACCEPT / DEFER / INVESTIGATE per finding |
 
 ## Verification
 

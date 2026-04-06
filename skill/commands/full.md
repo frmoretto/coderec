@@ -43,7 +43,11 @@ coderec full --sot /absolute/path/to/codebase
    - Output: system_map.md (includes mode-specific SOT header fields)
 
 2. Layer 2: Module Intelligence (loop)
-   - For each module identified in Layer 1:
+   - Before starting: populate the Module Disposition table in system_map.md.
+     For each module from Layer 1, decide: CARD, MERGED, or SKIPPED.
+     Every module MUST appear in the table with a valid reason.
+     See system_map.md template for valid skip/merge rules.
+   - For each module with disposition CARD or MERGED:
      - Read module source code from SOT_ROOT + system_map as context
      - Extract: purpose, public API, internal state, contracts, assumptions
      - Every verbatim contract entry includes Source: file_path:line_number
@@ -146,13 +150,16 @@ coderec full --sot /absolute/path/to/codebase
        - FAIL if any behavior contract mismatches
 
    5g. Gate 7 - Cross-Reference Consistency
-       Verify all CID files agree on module names, paths, IDs, and references (BIDIRECTIONAL):
-       - Every module in system_map MUST have a corresponding module card (detect skipped modules)
-       - Every module card MUST correspond to a system_map entry (detect orphan cards)
-       - Module paths in all coherence_report sections exist as module cards
+       Verify all CID files agree on module names, paths, IDs, and references:
+       - Every module in system_map MUST appear in the Module Disposition table
+       - Every module with disposition CARD must have a corresponding module card file
+       - Every module with disposition MERGED must have its target card file exist
+       - Every module with disposition SKIPPED must have a valid skip reason
+       - Every module card file MUST correspond to a system_map entry (detect orphan cards)
+       - Module paths in all coherence_report sections exist as module cards or merged targets
        - Module IDs follow the deterministic algorithm everywhere
        - File paths in decision_register match system_map paths
-       - No orphan references in either direction across CID files
+       - No orphan references across CID files
        - FAIL if any inconsistency found
 
    5h. End-of-Run SOT Revalidation
@@ -187,7 +194,18 @@ coderec full --sot /absolute/path/to/codebase
    - Apply end-of-run staleness: STALE overrides DEGRADED/VALID, but never overrides INVALID.
    - Publish both human status text and machine status enum (`VALID|INVALID|DEGRADED|STALE`) in verification output.
 
-6. Verification: External Gates (recommended, not blocking)
+6. CID Handoff: Triage (human decision artifact)
+   - Generate triage.md from coherence_report.md findings
+   - For each finding (contradictions, dead code, type gaps, coupling, invariants, duplication):
+     - Present the finding with its severity and CID evidence
+     - List decision options (FIX / ACCEPT / DEFER / INVESTIGATE)
+     - Leave the Decision column blank for human input
+   - The human fills in decisions before passing to downstream tools
+   - Stream Coding (or any SDD tool) reads triage.md and generates specs
+     ONLY for items marked FIX. Items marked ACCEPT are ratified.
+   - Output: triage.md
+
+7. Verification: External Gates (recommended, not blocking)
    - Run Clarity Gate on CID -> epistemic quality
    - Run specverify base on CID -> structural completeness
    - Human review of decision register

@@ -221,18 +221,20 @@ Denominator definitions:
 ### Gate 7 - Cross-Reference Consistency
 
 > Verify that all CID files agree on module names, paths, IDs, and references.
-> This catches R-06 (name corrected in one file but not another).
+> Uses the Module Disposition table in system_map to validate skip/merge decisions.
 
 | Check | Method | Result |
 |-------|--------|--------|
-| Module names consistent across system_map and module cards | Compare names | PASS / {{n}} FAIL |
-| Module paths consistent across system_map and module cards | Compare paths | PASS / {{n}} FAIL |
-| Module IDs follow deterministic ID algorithm | Recompute from normalized module paths | PASS / {{n}} FAIL |
-| All module IDs in coherence_report exist as module cards | Cross-reference `Module ID` fields | PASS / {{n}} FAIL |
-| All `File Path` fields in decision_register match system_map paths | Cross-reference | PASS / {{n}} FAIL |
-| No orphan references (name/path in one file, missing from another) | Full graph check | PASS / {{n}} FAIL |
+| Every system_map module appears in Disposition table | Compare boundary table vs disposition table | PASS / {{n}} FAIL |
+| Every CARD disposition has a module card file | Check file exists | PASS / {{n}} FAIL |
+| Every MERGED disposition has its target card file | Check target file exists | PASS / {{n}} FAIL |
+| Every SKIPPED disposition has a valid skip reason | Check against valid skip rules | PASS / {{n}} FAIL |
+| No orphan card files (every card matches a system_map module) | Reverse check | PASS / {{n}} FAIL |
+| Module IDs follow deterministic algorithm | Recompute from normalized paths | PASS / {{n}} FAIL |
+| Module IDs in coherence_report exist as cards or merged targets | Cross-reference | PASS / {{n}} FAIL |
+| File paths in decision_register match system_map paths | Cross-reference | PASS / {{n}} FAIL |
 
-**Gate 7 FAIL = CID INVALID.** Internal inconsistency means consumers will get contradictory information.
+**Gate 7 FAIL = CID INVALID.** Internal inconsistency or unjustified omissions mean consumers get incomplete/contradictory information.
 
 ### End-of-Run SOT Revalidation
 

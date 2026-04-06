@@ -74,9 +74,37 @@
 |--------|-----------|-----------|---------------|-------|-----------|-----------|-----------|
 | {{name}} | {{mod_<first16_sha256_of_normalized_module_path>}} | {{path}} | {{one_line}} | {{count}} | {{range}} | {{1-6}} | High / Medium / Low |
 
+### Module Disposition (Layer 2)
+
+> Every module in the boundary table MUST appear here with a disposition.
+> Gate 7 verifies this table matches the actual module card files.
+> This prevents silent skips — every omission must be justified.
+
+| Module | Disposition | Card file | Reason |
+|--------|------------|-----------|--------|
+| {{name}} | CARD | modules/{{name}}.md | Full card produced |
+| {{name}} | MERGED into {{target}} | modules/{{target}}.md | {{why — e.g., "1-file module, cohesive with target"}} |
+| {{name}} | SKIPPED | -- | {{why — must match a skip rule below}} |
+
+**Valid skip reasons:**
+- **Generated code** — auto-generated files with no custom logic (e.g., shadcn/ui primitives)
+- **Declarative-only** — markdown/config/prompt files, not executable code
+- **Trivial wrapper** — <50 LOC, delegates entirely to a component already covered in another card
+- **Infrastructure** — test harness, CI config, build scripts (not business logic)
+
+**Valid merge reasons:**
+- **Cohesive unit** — 2-3 small modules (<100 LOC each) that form one logical domain and share tight coupling
+- **Same-concern split** — files split by convention (hooks/, contexts/, lib/) but serving one feature
+
+**NOT valid reasons to skip:**
+- "Too small" alone (a 20 LOC page that is the only consumer of a mutation must be documented)
+- "Similar to another module" (similar is not identical)
+- Context window pressure (split into chunks instead)
+
 ### Processing Order (for Layer 2)
 
 > Dependency-topological: leaf modules first, root modules last. Alphabetical tie-break.
+> Only modules with disposition CARD or MERGED are processed.
 
 1. {{module_name}} (leaf - no internal dependencies)
 2. {{module_name}} (depends on #1)
