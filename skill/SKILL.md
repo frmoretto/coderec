@@ -16,7 +16,18 @@ Transforms brownfield codebases into **Codebase Intelligence Documents (CIDs)** 
 | 1 | **Cartography** | File tree, imports, entry points | System map (boundaries, modules, dependencies) |
 | 2 | **Module Intelligence** | One module + Layer 1 map | Intelligence card (purpose, contracts, assumptions) |
 | 3 | **Cross-Module Synthesis** | All Layer 2 cards (NOT code) | Coherence report (contradictions, dead paths, coupling) |
+| 3.5 | **Adversarial Validation** | All Layer 3 findings | Steelmanned findings (confirmed / downgraded / dropped) |
 | 4 | **Decision Archaeology** | Cards + git blame + comments | Decision register (documented / inferred / unknown) |
+
+### Layer 3.5: Adversarial Validation (Steelman)
+
+Before findings reach triage, the agent challenges each one adversarially. For every finding in the coherence report:
+
+1. **Steelman** — argue FOR the current behavior being correct, using codebase evidence (not generic reasoning).
+2. **RWIA (Real-World Impact Assessment)** — describe a concrete production failure scenario, or state "none found."
+3. **Evidence grade** — classify as STRUCTURAL (import graph, type system, gate-verified) or SPECULATIVE (naming, conventions, absence of evidence).
+
+Verdicts: **CONFIRMED** (steelman fails, real impact, structural evidence) | **DOWNGRADED** (partial steelman or unlikely impact) | **DROPPED** (steelman holds, no impact, speculative). Dropped findings are retained in an appendix for audit but do not reach triage. This prevents false positives from generating unnecessary specs downstream.
 
 ## Critical Rule: Source of Truth
 

@@ -69,14 +69,54 @@
 
 > If no version conflicts detected, write "None detected."
 
+## Adversarial Validation (Steelman)
+
+> **Purpose:** Challenge every finding above before it reaches triage. For each finding,
+> argue AGAINST it being a problem. Use evidence from the codebase, not generic reasoning.
+> This step prevents false positives from generating unnecessary specs downstream.
+>
+> **Rules:**
+> - Every finding MUST be steelmanned — no exceptions.
+> - Steelman arguments must cite codebase evidence (comments, ADRs, commit messages, architectural patterns).
+> - RWIA must describe a concrete production failure scenario, or state "none found."
+> - Downgraded findings still appear in triage with the steelman attached — the human decides.
+> - Dropped findings (steelman holds + no RWIA scenario + speculative evidence) move to the Appendix below, not triage.
+> - Targeted source re-reads are permitted for steelman evidence gathering (within Layer 3 re-read budget).
+
+| # | Original Severity | Steelman (argument FOR current behavior) | RWIA (concrete failure scenario) | Evidence Grade | Verdict |
+|---|-------------------|------------------------------------------|----------------------------------|----------------|---------|
+| C-001 | {{severity}} | {{first-principles argument why current state is correct}} | {{specific scenario where this causes a production failure, or "none found"}} | STRUCTURAL / SPECULATIVE | CONFIRMED / DOWNGRADED / DROPPED |
+| D-001 | {{severity}} | {{argument why this code is actually used or needed}} | {{scenario or "none found"}} | STRUCTURAL / SPECULATIVE | CONFIRMED / DOWNGRADED / DROPPED |
+
+> **Evidence grades:**
+> - **STRUCTURAL** — derived from import graph, type system, runtime paths, or gate-verified contracts. Hard to dispute.
+> - **SPECULATIVE** — derived from naming conventions, code patterns, absence of evidence, or assumptions about intent. May be wrong.
+
+> **Verdicts:**
+> - **CONFIRMED** — steelman fails, RWIA scenario exists, evidence is structural. Finding proceeds to triage at original severity.
+> - **DOWNGRADED** — steelman partially holds or RWIA scenario is unlikely. Finding proceeds to triage at reduced severity.
+> - **DROPPED** — steelman fully holds, no RWIA scenario, evidence is speculative. Finding moves to appendix.
+
+---
+
+## Adversarial Validation Appendix (Dropped Findings)
+
+> Findings where the steelman held. Retained for audit trail — not sent to triage.
+
+| # | Original Finding | Original Severity | Steelman | Why Dropped |
+|---|-----------------|-------------------|----------|-------------|
+| {{id}} | {{finding}} | {{severity}} | {{steelman argument}} | {{steelman held + no RWIA + speculative}} |
+
+---
+
 ## Summary
 
-| Category | Count | Critical |
-|----------|-------|----------|
-| Contradictions | {{n}} | {{n}} |
-| Dead code | {{n}} | - |
-| Implicit coupling | {{n}} | {{n}} |
-| Undocumented invariants | {{n}} | {{n}} |
-| Type gaps | {{n}} | - |
-| Duplication | {{n}} | - |
-| Version conflicts | {{n}} | {{n}} |
+| Category | Count | Critical | Confirmed | Downgraded | Dropped |
+|----------|-------|----------|-----------|------------|---------|
+| Contradictions | {{n}} | {{n}} | {{n}} | {{n}} | {{n}} |
+| Dead code | {{n}} | - | {{n}} | {{n}} | {{n}} |
+| Implicit coupling | {{n}} | {{n}} | {{n}} | {{n}} | {{n}} |
+| Undocumented invariants | {{n}} | {{n}} | {{n}} | {{n}} | {{n}} |
+| Type gaps | {{n}} | - | {{n}} | {{n}} | {{n}} |
+| Duplication | {{n}} | - | {{n}} | {{n}} | {{n}} |
+| Version conflicts | {{n}} | {{n}} | {{n}} | {{n}} | {{n}} |

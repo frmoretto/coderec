@@ -55,6 +55,26 @@ coderec full --sot /absolute/path/to/codebase
    - Find: contradictions, dead code, implicit coupling, undocumented invariants
    - Output: coherence_report.md
 
+3.5. Adversarial Validation (Steelman)
+   - For EVERY finding in the coherence report, execute three checks:
+     a. Steelman: argue AGAINST it being a problem, citing codebase evidence
+        (comments, ADRs, commit messages, architectural patterns, SEC-* docs).
+        The argument must be specific to THIS codebase, not generic.
+     b. RWIA (Real-World Impact Assessment): describe a concrete scenario where
+        this finding causes a production failure. If no scenario can be
+        constructed, state "none found."
+     c. Evidence grade: classify as STRUCTURAL (import graph, type system,
+        gate-verified contracts) or SPECULATIVE (naming, conventions, absence
+        of evidence).
+   - Assign verdict per finding:
+     - CONFIRMED: steelman fails + RWIA scenario exists + structural evidence
+     - DOWNGRADED: steelman partially holds or RWIA scenario is unlikely
+     - DROPPED: steelman fully holds + no RWIA scenario + speculative evidence
+   - CONFIRMED and DOWNGRADED findings proceed to triage (with steelman attached).
+   - DROPPED findings go to the Adversarial Validation Appendix in coherence_report.md.
+   - Targeted source re-reads permitted within Layer 3 re-read budget.
+   - Output: updated coherence_report.md (Adversarial Validation section + Appendix)
+
 4. Layer 4: Decision Archaeology
    - If SOT_MODE = git (default):
      - Input: Layer 2 cards + git blame + comments + commit messages from SOT_ROOT
