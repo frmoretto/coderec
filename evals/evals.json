@@ -1,0 +1,52 @@
+{
+  "name": "coderec",
+  "version": "1.0",
+  "description": "Evaluation suite for coderec skill — tests layer outputs and gate verification against known codebase characteristics.",
+  "evals": [
+    {
+      "id": "layer1-boundary-detection",
+      "description": "Run cartography on a known repo. Module boundaries should match expected count and precedence levels.",
+      "input": "examples/sample-repo/",
+      "expected": {
+        "modules_min": 3,
+        "precedence_levels_present": ["manifest", "framework"],
+        "confidence_tiers": ["High", "Medium"]
+      }
+    },
+    {
+      "id": "gate1-path-verification",
+      "description": "All paths in CID resolve to actual files in SOT_ROOT.",
+      "input": "examples/sample-cid/",
+      "expected": {
+        "gate1_status": "PASS",
+        "unresolved_paths": 0
+      }
+    },
+    {
+      "id": "gate3-contract-verification",
+      "description": "Verbatim contracts in module cards match source at provenance anchors.",
+      "input": "examples/sample-cid/",
+      "expected": {
+        "gate3_status": "PASS"
+      }
+    },
+    {
+      "id": "gate7-cross-reference",
+      "description": "All CID files internally consistent — no orphan cards, deterministic IDs, all modules in disposition table.",
+      "input": "examples/sample-cid/",
+      "expected": {
+        "gate7_status": "PASS",
+        "orphan_cards": 0
+      }
+    },
+    {
+      "id": "sot-enforcement",
+      "description": "Verify that all reads use absolute paths prefixed with SOT_ROOT.",
+      "input": "any",
+      "expected": {
+        "sot_bound": true,
+        "relative_path_reads": 0
+      }
+    }
+  ]
+}

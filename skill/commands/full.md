@@ -43,11 +43,7 @@ coderec full --sot /absolute/path/to/codebase
    - Output: system_map.md (includes mode-specific SOT header fields)
 
 2. Layer 2: Module Intelligence (loop)
-   - Before starting: populate the Module Disposition table in system_map.md.
-     For each module from Layer 1, decide: CARD, MERGED, or SKIPPED.
-     Every module MUST appear in the table with a valid reason.
-     See system_map.md template for valid skip/merge rules.
-   - For each module with disposition CARD or MERGED:
+   - For each module identified in Layer 1:
      - Read module source code from SOT_ROOT + system_map as context
      - Extract: purpose, public API, internal state, contracts, assumptions
      - Every verbatim contract entry includes Source: file_path:line_number
@@ -150,16 +146,13 @@ coderec full --sot /absolute/path/to/codebase
        - FAIL if any behavior contract mismatches
 
    5g. Gate 7 - Cross-Reference Consistency
-       Verify all CID files agree on module names, paths, IDs, and references:
-       - Every module in system_map MUST appear in the Module Disposition table
-       - Every module with disposition CARD must have a corresponding module card file
-       - Every module with disposition MERGED must have its target card file exist
-       - Every module with disposition SKIPPED must have a valid skip reason
-       - Every module card file MUST correspond to a system_map entry (detect orphan cards)
-       - Module paths in all coherence_report sections exist as module cards or merged targets
+       Verify all CID files agree on module names, paths, IDs, and references (BIDIRECTIONAL):
+       - Every module in system_map MUST have a corresponding module card (detect skipped modules)
+       - Every module card MUST correspond to a system_map entry (detect orphan cards)
+       - Module paths in all coherence_report sections exist as module cards
        - Module IDs follow the deterministic algorithm everywhere
        - File paths in decision_register match system_map paths
-       - No orphan references across CID files
+       - No orphan references in either direction across CID files
        - FAIL if any inconsistency found
 
    5h. End-of-Run SOT Revalidation

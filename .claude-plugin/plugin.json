@@ -1,0 +1,7 @@
+{
+  "name": "coderec",
+  "description": "Codebase reconnaissance — progressive 4-layer protocol with 7 verification gates. Transforms brownfield codebases into verified Codebase Intelligence Documents (CIDs).",
+  "author": {
+    "name": "Francesco Marinoni Moretto"
+  }
+}
