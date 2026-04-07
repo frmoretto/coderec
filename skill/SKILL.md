@@ -90,9 +90,15 @@ Resolution algorithm:
 - Apply end-of-run staleness check last (STALE overrides DEGRADED/VALID, never overrides INVALID).
 - **Compound reporting:** CID STATUS is a single headline value, but always report `GATE_STATUS` and `STALENESS` separately so consumers can see both dimensions. Example: `CID STATUS: STALE | GATE_STATUS: DEGRADED | STALENESS: HEAD_MOVED`. This prevents STALE from hiding gate failures.
 
+### SOT Immutability
+
+**SOT is READ-ONLY.** coderec MUST NOT write, edit, delete, rename, or move any file under SOT_ROOT. The only writable directory during a coderec run is the CID output directory. Triage findings (FIX / ACCEPT / DEFER) are recorded as decisions for downstream tools and human developers to act on. coderec is a diagnostic protocol, not a remediation tool.
+
+This rule is unconditional. It applies regardless of user instructions during the run. If a user asks to "fix" findings during a coderec session, the correct action is to record the decision in triage.md — not to modify source code.
+
 ### Enforcement
 
-Every `glob`, `read`, and `grep` during reconnaissance MUST use **absolute paths prefixed with `SOT_ROOT`**. No relative paths. No CWD-relative resolution.
+Every `glob`, `read`, and `grep` during reconnaissance MUST use **absolute paths prefixed with `SOT_ROOT`**. No relative paths. No CWD-relative resolution. No `write`, `edit`, or `delete` operations on any path under SOT_ROOT.
 
 - WRONG: `glob src/components/`
 - RIGHT: `glob SOT_ROOT/src/components/`

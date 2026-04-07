@@ -5,6 +5,10 @@
 **CID Status:** {{VALID / DEGRADED}}
 **Source:** Generated from coherence_report.md findings
 
+> **WARNING: This file is the handoff boundary.** coderec produced it. A separate tool or human
+> acts on it. Do NOT apply FIX decisions during the coderec run. Do NOT modify, delete, or edit
+> any file under SOT_ROOT based on these findings. Remediation is a downstream responsibility.
+>
 > This is the human decision layer between coderec (what IS) and spec-writing (what SHOULD BE).
 > coderec observes. It does NOT prescribe. This triage presents findings for human judgment.
 >

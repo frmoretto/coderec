@@ -198,7 +198,15 @@ coderec full --sot /absolute/path/to/codebase
      ONLY for items marked FIX. Items marked ACCEPT are ratified.
    - Output: triage.md
 
-7. Verification: External Gates (recommended, not blocking)
+7. STOP. Do not modify SOT_ROOT.
+   - The CID is complete. coderec's job ends here.
+   - Triage decisions marked FIX are handed off to downstream tooling
+     (stream-coding, manual dev). coderec MUST NOT act on them.
+   - If the user asks to "fix" or "apply" triage findings during the
+     coderec run, record the decision in triage.md and explain that
+     remediation is a downstream responsibility.
+
+8. Verification: External Gates (recommended, not blocking)
    - Run Clarity Gate on CID -> epistemic quality
    - Run specverify base on CID -> structural completeness
    - Human review of decision register
