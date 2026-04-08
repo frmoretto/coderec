@@ -56,16 +56,24 @@ coderec full --sot /absolute/path/to/codebase
    - Output: coherence_report.md
 
 3.5. Adversarial Validation (Steelman)
-   - For EVERY finding in the coherence report, execute three checks:
+   - For EVERY finding in the coherence report, execute four checks:
      a. Steelman: argue AGAINST it being a problem, citing codebase evidence
         (comments, ADRs, commit messages, architectural patterns, SEC-* docs).
         The argument must be specific to THIS codebase, not generic.
      b. RWIA (Real-World Impact Assessment): describe a concrete scenario where
         this finding causes a production failure. If no scenario can be
         constructed, state "none found."
-     c. Evidence grade: classify as STRUCTURAL (import graph, type system,
+     c. Feasibility: if the finding implies a fix direction, verify the fix is
+        architecturally possible. Check cross-runtime boundaries (e.g., serverless
+        isolates that cannot import frontend modules, separate backend runtimes),
+        deploy constraints, shared-nothing architectures. If infeasible, DOWNGRADE and note the constraint.
+     d. Evidence grade: classify as STRUCTURAL (import graph, type system,
         gate-verified contracts) or SPECULATIVE (naming, conventions, absence
         of evidence).
+   - Dead code additional check: before confirming, verify no CLI/manual
+     invocation patterns exist (npx <tool> run, runbooks, admin scripts,
+     reflection, DI, event subscriptions, cron). Grep returning 0 callers
+     is necessary but not sufficient for internal mutations and admin tooling.
    - Assign verdict per finding:
      - CONFIRMED: steelman fails + RWIA scenario exists + structural evidence
      - DOWNGRADED: steelman partially holds or RWIA scenario is unlikely

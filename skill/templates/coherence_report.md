@@ -79,14 +79,23 @@
 > - Every finding MUST be steelmanned — no exceptions.
 > - Steelman arguments must cite codebase evidence (comments, ADRs, commit messages, architectural patterns).
 > - RWIA must describe a concrete production failure scenario, or state "none found."
+> - **Feasibility check:** if the finding implies a fix direction, verify the fix is architecturally possible.
+>   Check for: cross-runtime boundaries (e.g., serverless isolates that cannot import frontend modules,
+>   separate backend runtimes with no shared filesystem), deploy constraints, shared-nothing architectures. If the implied fix is infeasible, DOWNGRADE
+>   the finding and note the constraint — the fix direction must be redesigned before it reaches specs.
+> - **Dead code: CLI/manual invocation check.** Before confirming dead code, check for non-import
+>   usage patterns: `npx <tool> run`, CLI scripts, runbooks, manual admin invocations, reflection,
+>   DI containers, event subscriptions, cron jobs. Grep returning 0 callers is necessary but not
+>   sufficient — internal mutations, admin tooling, and migration scripts are commonly invoked
+>   outside the import graph.
 > - Downgraded findings still appear in triage with the steelman attached — the human decides.
 > - Dropped findings (steelman holds + no RWIA scenario + speculative evidence) move to the Appendix below, not triage.
 > - Targeted source re-reads are permitted for steelman evidence gathering (within Layer 3 re-read budget).
 
-| # | Original Severity | Steelman (argument FOR current behavior) | RWIA (concrete failure scenario) | Evidence Grade | Verdict |
-|---|-------------------|------------------------------------------|----------------------------------|----------------|---------|
-| C-001 | {{severity}} | {{first-principles argument why current state is correct}} | {{specific scenario where this causes a production failure, or "none found"}} | STRUCTURAL / SPECULATIVE | CONFIRMED / DOWNGRADED / DROPPED |
-| D-001 | {{severity}} | {{argument why this code is actually used or needed}} | {{scenario or "none found"}} | STRUCTURAL / SPECULATIVE | CONFIRMED / DOWNGRADED / DROPPED |
+| # | Original Severity | Steelman (argument FOR current behavior) | RWIA (concrete failure scenario) | Feasibility | Evidence Grade | Verdict |
+|---|-------------------|------------------------------------------|----------------------------------|-------------|----------------|---------|
+| C-001 | {{severity}} | {{first-principles argument why current state is correct}} | {{specific scenario where this causes a production failure, or "none found"}} | {{is the implied fix architecturally feasible? cross-runtime? deploy scope?}} | STRUCTURAL / SPECULATIVE | CONFIRMED / DOWNGRADED / DROPPED |
+| D-001 | {{severity}} | {{argument why this code is actually used or needed — check CLI/manual invocation patterns}} | {{scenario or "none found"}} | N/A | STRUCTURAL / SPECULATIVE | CONFIRMED / DOWNGRADED / DROPPED |
 
 > **Evidence grades:**
 > - **STRUCTURAL** — derived from import graph, type system, runtime paths, or gate-verified contracts. Hard to dispute.

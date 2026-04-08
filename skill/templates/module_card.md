@@ -175,7 +175,7 @@ Examples: `lang="it"` on `<html>` (error A-11), `className="font-sans antialiase
 {{exact metadata object or config - copy verbatim}}
 ```
 
-Example: `export const metadata = { title: "HNTD Intel - Trova developer..." }` (error A-15)
+Example: `export const metadata = { title: "My App - Product description..." }` (error A-15)
 
 ### Middleware / Routing Logic (if middleware or API route)
 

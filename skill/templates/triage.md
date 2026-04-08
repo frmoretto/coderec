@@ -22,6 +22,39 @@
 
 ---
 
+## Deduplication
+
+> Before filling decisions, identify findings that share the same root cause across categories.
+> Group them and mark duplicates with "→ see {{primary_id}}" in the Decision column.
+> Only the primary finding gets a decision; duplicates inherit it.
+
+| Root Cause | Primary Finding | Duplicates |
+|-----------|----------------|------------|
+| {{description}} | {{id}} | {{id, id, ...}} |
+
+## Sizing and Blast Radius
+
+> For each FIX item, estimate effort and classify deploy scope.
+> This enables prioritization and sequencing. Fill after decisions are made.
+
+| # | Effort | Deploy Scope | Depends On | Notes |
+|---|--------|-------------|------------|-------|
+| {{id}} | TRIVIAL / SMALL / MEDIUM / LARGE | FRONTEND-ONLY / BACKEND-DEPLOY / PIPELINE / CROSS-STACK | {{id or "none"}} | {{constraints, cross-runtime notes}} |
+
+> **Effort guide:**
+> - **TRIVIAL** — single import change, delete unused file, rename (~minutes)
+> - **SMALL** — extract shared constant/util, add type annotations (~hours)
+> - **MEDIUM** — new shared module, schema change, coordinated multi-file refactor (~day)
+> - **LARGE** — cross-runtime architecture change, migration + pipeline coordination (~days)
+>
+> **Deploy scope:**
+> - **FRONTEND-ONLY** — Vercel/static deploy, no backend changes
+> - **BACKEND-DEPLOY** — requires backend/server deploy to production
+> - **PIPELINE** — touches pipeline or infrastructure scripts only
+> - **CROSS-STACK** — requires coordinated frontend + backend + pipeline changes
+
+---
+
 ## Contradictions
 
 | # | Finding | Severity | Evidence | Options | Decision | Rationale |
