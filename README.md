@@ -37,7 +37,7 @@ We told the agent to re-read the codebase and fix them. **6 errors survived.** S
 coderec full --sot /path/to/your/codebase
 ```
 
-It scans your codebase in 4 progressive layers, produces a **Codebase Intelligence Document (CID)**, and then *verifies every claim in that document against the actual source code* through 7 gates.
+It scans your codebase in 5 progressive layers (including an adversarial validation step that steelmans every finding), produces a **Codebase Intelligence Document (CID)**, and then *verifies every claim in that document against the actual source code* through 7 gates.
 
 The CID is a **map**, not a plan — it tells you what *is*, not what *should be*. The output isn't a summary. It's a verified artifact — provenance-anchored, gate-checked, and machine-readable.
 
@@ -45,7 +45,7 @@ Full CID on a 27k LOC production app: **~45 minutes with Claude Opus.** No insta
 
 ```mermaid
 graph LR
-    A["Brownfield\ncodebase"] --> B["coderec\n4 layers"]
+    A["Brownfield\ncodebase"] --> B["coderec\n5 layers"]
     B --> C["CID\nwhat IS"]
     C --> D["triage\nhuman decides"]
     D --> E["stream-coding\nwhat SHOULD BE"]
@@ -65,15 +65,15 @@ graph LR
 
 ```
 CID/
-+-- system_map.md            What modules exist, how they connect
++-- system_map.md            Modules, deps, env, CI/CD, migrations, feature flags
 +-- modules/
 |   +-- auth.md              Per-module: contracts, behavior, assumptions
 |   +-- billing.md           Every claim has a source:line provenance anchor
 |   \-- ...
-+-- coherence_report.md      Contradictions, dead code, type gaps, duplication
-+-- decision_register.md     Why things are the way they are (or "unknown")
++-- coherence_report.md      Contradictions, dead code, type gaps + adversarial validation
++-- decision_register.md     Why things are the way they are -- 6 confidence levels
 +-- verification_status.md   7 gates -- all checked against source
-\-- triage.md                Your decisions: FIX / ACCEPT / DEFER
+\-- triage.md                Your decisions: FIX / ACCEPT / DEFER / INVESTIGATE + sizing + blast radius
 ```
 
 <details>
@@ -98,7 +98,23 @@ CID/
 | skill/scripts     | convex/http   | HTTP REST (Bearer token)       |
 | src/middleware     | Next.js       | Hostname-based routing         |
 | Stripe            | convex/http   | Webhook POST                   |
+
+## Operational Artifacts
+
+| Artifact      | Type      | Path                       | Affects                  |
+|---------------|-----------|----------------------------|--------------------------|
+| ci.yml        | CI/CD     | .github/workflows/ci.yml   | All modules (test/deploy)|
+| _migrations/  | Migration | convex/_migrations/        | convex                   |
+| Dockerfile    | Container | skill/Dockerfile           | pipeline                 |
+
+## Feature Flags
+
+| Flag           | Modules Affected     | Status  |
+|----------------|---------------------|---------|
+| BILLING_V2     | billing, dashboard   | active  |
 ```
+
+> System map covers more than code structure — CI/CD pipelines, migrations, Dockerfiles, K8s/IaC, and feature flags all affect production behavior and get inventoried here. Feature-flagged code is distinguished from dead code in the coherence report.
 
 </details>
 
@@ -136,22 +152,26 @@ A CID documents what your codebase **does** — not what it **should** do. It's 
 
 ---
 
-## The 4 layers
+## The 5 layers
 
 ```mermaid
 graph TD
     L1["Layer 1: Cartography\nFile tree, boundaries, dependencies\n~minutes"] --> L2
     L2["Layer 2: Module Intelligence\nVerbatim contracts + provenance\n~1-2 hours"] --> L3
-    L3["Layer 3: Cross-Module Synthesis\nContradictions, dead code, coupling\n~30 min"] --> L4
-    L4["Layer 4: Decision Archaeology\nGit blame + confidence levels\n~30 min"]
+    L3["Layer 3: Cross-Module Synthesis\nContradictions, dead code, coupling\n~30 min"] --> L35
+    L35["Layer 3.5: Adversarial Validation\nSteelman every finding before triage\n~15 min"] --> L4
+    L4["Layer 4: Decision Archaeology\nGit blame + 6 confidence levels\n~30 min"]
 
     style L1 fill:#0f3460,stroke:#16213e,color:#fff
     style L2 fill:#533483,stroke:#2b2d42,color:#fff
     style L3 fill:#e94560,stroke:#1a1a2e,color:#fff
+    style L35 fill:#1a1a2e,stroke:#e94560,color:#fff
     style L4 fill:#0f3460,stroke:#16213e,color:#fff
 ```
 
 Each layer compacts context for the next. Code is read once per module, not dumped wholesale.
+
+> **Layer 3.5** challenges every finding with a steelman argument, a real-world impact scenario, and an architectural feasibility check before it reaches triage. Findings without structural evidence or a concrete failure scenario are dropped to an audit appendix instead of generating noise downstream.
 
 ---
 
@@ -171,7 +191,8 @@ Gate 7  Cross-ref    All CID files agree with each other         INVALID if wron
 
 Plus: **secret scan** (pre-step) and **SOT revalidation** (did the code change while we were scanning?).
 
-**Status:** `VALID` . `DEGRADED` . `STALE` . `INVALID`
+**CID status:** `VALID` . `DEGRADED` . `STALE` . `INVALID`
+**Per-gate status:** `PASS` . `FAIL` . `WARN` . `UNVERIFIABLE` (e.g., Gate 2 on a project with no lock file)
 
 > `INVALID` = hard stop. Don't feed this to your spec tool.
 
@@ -187,7 +208,7 @@ coderec full --sot /path/to/your/codebase
 ```
 Load [`skill/SKILL.md`](skill/SKILL.md) into Claude Code, Codex, or any agent that reads skill files.
 
-**Scoped** (just one area and its dependencies):
+**Scoped** (one area + its bidirectional dependencies — inbound callers and outbound calls):
 ```
 coderec scope src/auth --sot /path/to/codebase
 ```
@@ -196,6 +217,16 @@ coderec scope src/auth --sot /path/to/codebase
 ```
 coderec cartography --sot /path/to/codebase
 ```
+
+**Source modes:**
+
+| Mode | When to use | Status ceiling |
+|------|------------|----------------|
+| git clean *(default)* | Normal git repo, clean working tree | `VALID` |
+| `--allow-dirty` | Git repo with WIP changes you want to scan anyway | `DEGRADED` |
+| `--sot-mode snapshot` | Non-git source: tarball, vendor drop, SVN checkout | `VALID` |
+
+Snapshot mode uses a Merkle content hash for pinning and staleness detection. Layer 4 degrades to code-only (no git blame).
 
 ---
 
@@ -230,6 +261,8 @@ The same shift is happening in software. A senior developer reads an architectur
 | Document quality needed | "Good enough" — humans fill the gaps | **Must be verified** — no one fills the gaps |
 
 The verification gates replace the implicit fault protection that humans provide. Every claim in a CID is anchored to a specific `file:line` in the source, hashed for integrity, and checked by a gate before the CID is marked VALID.
+
+And the gates don't even trust the agent's own metadata. When a module card claims its type is "utility" but the directory contains `.tsx` files or route markers, Gate 6 flags it `SUSPICIOUS` and requires Behavior Contracts anyway. The agent cannot misclassify a module to skip a gate.
 
 Without that: you're automating on top of opinions.
 With that: you're automating on top of evidence.
@@ -324,7 +357,7 @@ Follows the [Agent Skills format](https://agentskills.io/) and works with Claude
 ## Contributing
 
 - **Test it** — Run coderec on your brownfield codebase and tell us what breaks
-- **Extend it** — Language support beyond JS/TS/Python/Go/Rust/Java
+- **Extend it** — Extra language packs (Ruby, Elixir, PHP, Kotlin, Swift). JS/TS, Python, Go, Rust, and Java are shipped.
 - **Build gates** — Tooling that automates the 7-gate verification
 
 ---
